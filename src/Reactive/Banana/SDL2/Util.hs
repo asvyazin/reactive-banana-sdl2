@@ -22,6 +22,10 @@ import           Reactive.Banana.Frameworks
 import           Reactive.Banana.SDL2.Types
 import           SDL
 import           SDL.Raw                    as SDLR
+import           SDL.Vect
+import           Data.Int
+import           Data.Ix
+import           Foreign.C.Types
 
 
 -- | Run while the given computation returns True
@@ -104,11 +108,17 @@ mouseButtonEvent = filterE isButton
 mouseEventWithin :: Rect -> WrappedEvent -> WrappedEvent
 mouseEventWithin ~(Rect x y w h) = filterE isWithin
   where
-    within pos = undefined
+    within :: SDL.Vect.Point V2 Int32 -> Bool
+    within = inRange (P (convertInt <$> V2 x y), P (convertInt <$> V2 (x + w) (y + h))) where
+      -- Convert CInt to Int32
+      convertInt :: CInt -> Int32
+      convertInt cint = fromInteger $ toInteger cint 
     isWithin e = case e of
         SDL.MouseMotionEvent (MouseMotionEventData _ _ _ pos _) -> within pos
-        SDL.MouseButtonEvent (MouseButtonEventData _ _ _ _ _ pos) -> within pos
+        -- SDL.MouseButtonEvent (MouseButtonEventData _ _ _ _ _ pos) -> within pos
         otherwise -> False
+
+
 
 -- | Filter an event on a particular key being held down
 keyFilter :: SDL.Keycode-> SDL.EventPayload -> Bool
