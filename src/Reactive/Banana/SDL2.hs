@@ -36,11 +36,12 @@ mainSDLPump sdlEventSource = do
 -- Evaluate to Nothing on quit, otherwise evaluates to the last event.
 collectEvents :: IO (Maybe [SDL.EventPayload])
 collectEvents = do
-  e <- SDL.pollEvent
-  case fmap SDL.eventPayload e of
-    Just SDL.QuitEvent -> return Nothing
-    Nothing            -> return (Just [])
-    Just event         -> liftM (liftM (event:)) collectEvents
+  es <- SDL.pollEvents
+  let payloads =
+        map SDL.eventPayload es
+  if SDL.QuitEvent `elem` payloads
+    then return Nothing
+    else return (Just payloads)
 
 -- | The main event loop.
 runSDLPump :: SDLEventSource -> IO ()
